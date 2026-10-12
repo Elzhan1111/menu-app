@@ -1,12 +1,12 @@
 // src/App.jsx
 import React, { useState } from 'react';
 import { MENU_DATA, ALL_ITEMS } from './menuData';
+import { IoSend } from 'react-icons/io5';
+
 
 export default function OrderMenu() {
   const [quantities, setQuantities] = useState({});
   const [loading, setLoading] = useState(false);
-
-  const POSTMAN_MOCK_URL = 'https://КОД_ВАШЕГО_MOCK_СЕРВЕРА.mock.pstmn.io/order';
 
   const handleCheckboxChange = (id) => {
     setQuantities((prev) => ({
@@ -42,10 +42,24 @@ export default function OrderMenu() {
   const serviceCharge = Math.round(subtotal * 0.1);
   const totalWithService = subtotal + serviceCharge;
 
-  // Замените старую функцию отправки на этот готовый код для WhatsApp:
+  const getNextOrderNumber = () => {
+    const now = new Date().getTime();
+    const savedTime = localStorage.getItem('order_timer');
+    const savedNumber = localStorage.getItem('order_number');
+    let currentNumber = 1;
+
+    if (!savedTime || now - parseInt(savedTime) > 24 * 60 * 60 * 1000) {
+      localStorage.setItem('order_timer', now.toString());
+      localStorage.setItem('order_number', '1');
+    } else {
+      currentNumber = parseInt(savedNumber || '0') + 1;
+      localStorage.setItem('order_number', currentNumber.toString());
+    }
+    return currentNumber;
+  };
+
   const handleTestPostRequest = () => {
-    // Собираем только выбранные блюда
-    const orderedItems = ALL_ITEMS.filter(item => quantities[item.id] > 0).map(item => ({
+    const orderedItems = ALL_ITEMS.filter(item => (quantities[item.id] || 0) > 0).map(item => ({
       name: item.name,
       price: item.price,
       quantity: quantities[item.id],
@@ -53,15 +67,15 @@ export default function OrderMenu() {
     }));
 
     if (orderedItems.length === 0) {
-      alert('Пожалуйста, выберите позиции из меню!');
+      alert('Пожалуйста, выберите позиции из меню (нажимайте + на доступных блюдах)!');
       return;
     }
 
-    // ВПИШИТЕ СЮДА СВОЙ НОМЕР ТЕЛЕФОНА (Начинается с 7, без плюсов и пробелов)
     const MY_WHATSAPP_NUMBER = '77052042550'; 
+    const orderNumber = getNextOrderNumber();
 
-    // Формируем красивый текст для сообщения
-    let message = `🌲 *НОВЫЙ ЗАКАЗ — Тургеньская • Форель* 🌲\n`;
+    let message = `📋 *ЗАКАЗ №${orderNumber}*\n`;
+    message += `🌲 *НОВЫЙ ЗАКАЗ — Горы • Река* 🌲\n`;
     message += `───────────────────\n`;
     
     orderedItems.forEach((item, index) => {
@@ -74,82 +88,55 @@ export default function OrderMenu() {
     message += `⚙️ *Обслуживание (10%):* ${serviceCharge} тг\n`;
     message += `💰 *ИТОГО К ОПЛАТЕ:* *${totalWithService} тг*`;
 
-   
     const encodedMessage = encodeURIComponent(message);
-
-    // Создаем прямую ссылку на быстрый чат
-    // const whatsappUrl = `https://wa.me{MY_WHATSAPP_NUMBER}?text=${encodedMessage}`;
-    // Самый надежный вариант без косых кавычек:
     const whatsappUrl = "https://wa.me/" + MY_WHATSAPP_NUMBER + "?text=" + encodedMessage;
 
-    // Мгновенно открываем чат с готовым текстом заказа
     window.open(whatsappUrl, '_blank');
-    
     setQuantities({}); 
   };
 
   const renderCategory = (title, items) => (
-    <div style={{ marginBottom: '25px', backgroundColor: '#ffffff', padding: '15px', borderRadius: '8px', border: '1px solid #2e7d32' }}>
+    <div style={{ marginBottom: '20px', backgroundColor: '#ffffff', padding: '15px', borderRadius: '8px', border: '1px solid #2e7d32' }}>
       <h3 style={{ borderBottom: '2px solid #2e7d32', paddingBottom: '5px', marginTop: 0, color: '#1b5e20', fontSize: '18px', fontWeight: 'bold' }}>{title}</h3>
       {items.map((item) => {
         const count = quantities[item.id] || 0;
         const isChecked = count > 0;
-        
-        // Добавили 'f4' в массив скрываемых элементов
         const isStaticItem = ['bs1', 'bs2', 'bs3', 'f1', 'f2', 'f3', 'f4'].includes(item.id);
 
         return (
-          <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #e8f5e9' }}>
-            
+          <div key={item.id} className="menu-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid #e8f5e9', gap: '10px' }}>
             {isStaticItem ? (
-              <div style={{ display: 'flex', alignItems: 'center', flex: 1, marginRight: '10px', color: '#000000', fontSize: '15px', userSelect: 'none' }}>
-                <span style={{ fontWeight: '500', color: '#000000' }}>
+              <div style={{ display: 'flex', alignItems: 'center', flex: 1, marginRight: '10px', color: '#000000', fontSize: '15px', userSelect: 'none', minWidth: '0' }}>
+                <span style={{ fontWeight: '500', color: '#000000', wordBreak: 'break-word' }}>
                   {item.name}
                 </span>
               </div>
             ) : (
-              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flex: 1, marginRight: '10px', color: '#000000', fontSize: '15px', userSelect: 'none' }}>
+              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer', flex: 1, color: '#000000', fontSize: '15px', userSelect: 'none', minWidth: '0' }}>
                 <input
                   type="checkbox"
                   checked={isChecked}
                   onChange={() => handleCheckboxChange(item.id)}
-                  style={{ marginRight: '12px', width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2e7d32' }}
+                  style={{ marginRight: '10px', width: '18px', height: '18px', cursor: 'pointer', accentColor: '#2e7d32', flexShrink: 0 }}
                 />
-                <span style={{ fontWeight: isChecked ? '700' : '500', color: '#000000' }}>
+                <span style={{ fontWeight: isChecked ? '700' : '500', color: '#000000', wordBreak: 'break-word' }}>
                   {item.name}
                 </span>
               </label>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-              
+            <div className="controls-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '12px', flexShrink: 0 }}>
               {!isStaticItem && (
-                <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', border: '1px solid #2e7d32', borderRadius: '4px', overflow: 'hidden' }}>
-                  <button 
-                    onClick={() => decrementCount(item.id)} 
-                    type="button" 
-                    style={{ width: '30px', height: '30px', border: 'none', background: '#c8e6c9', color: '#000000', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
-                  >
-                    -
-                  </button>
-                  <span style={{ width: '35px', textAlign: 'center', fontWeight: 'bold', fontSize: '16px', color: '#000000' }}>
-                    {count}
-                  </span>
-                  <button 
-                    onClick={() => incrementCount(item.id)} 
-                    type="button" 
-                    style={{ width: '30px', height: '30px', border: 'none', background: '#c8e6c9', color: '#000000', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}
-                  >
-                    +
-                  </button>
+                <div style={{ display: 'flex', alignItems: 'center', background: '#ffffff', border: '1px solid #2e7d32', borderRadius: '4px', overflow: 'hidden', flexShrink: 0 }}>
+                  <button onClick={() => decrementCount(item.id)} type="button" style={{ width: '28px', height: '28px', border: 'none', background: '#c8e6c9', color: '#000000', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>-</button>
+                  <span style={{ width: '30px', textAlign: 'center', fontWeight: 'bold', fontSize: '15px', color: '#000000' }}>{count}</span>
+                  <button onClick={() => incrementCount(item.id)} type="button" style={{ width: '30px', height: '30px', border: 'none', background: '#c8e6c9', color: '#000000', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>+</button>
                 </div>
               )}
-
-              <span style={{ fontWeight: '700', minWidth: '85px', textAlign: 'right', color: '#000000', fontSize: '16px' }}>
+              <span style={{ fontWeight: '700', minWidth: '75px', textAlign: 'right', color: '#000000', fontSize: '15px', flexShrink: 0 }}>
                 {item.price * (count || 1)} тг
               </span>
             </div>
-
           </div>
         );
       })}
@@ -157,11 +144,23 @@ export default function OrderMenu() {
   );
 
   return (
-    <div style={{ backgroundColor: '#e8f5e9', minHeight: '100vh', padding: '20px 10px' }}>
-      <div style={{ maxWidth: '650px', margin: '0 auto', padding: '25px', border: '3px solid #2e7d32', borderRadius: '12px', backgroundColor: '#ffffff', fontFamily: 'system-ui, sans-serif', boxShadow: '0 6px 20px rgba(27,94,32,0.12)' }}>
-        
+    <div style={{ backgroundColor: '#e8f5e9', minHeight: '100vh', padding: '10px 5px' }}>
+      <style>{`
+        .main-card { max-width: 650px; margin: 0 auto; padding: 25px; border: 3px solid #2e7d32; border-radius: 12px; background-color: #ffffff; fontFamily: system-ui, sans-serif; box-shadow: 0 6px 20px rgba(27,94,32,0.12); }
+        .section-divider { margin: 35px 0 25px 0; padding: 10px; background-color: #2e7d32; color: #ffffff; text-align: center; font-weight: 800; font-size: 16px; border-radius: 6px; letter-spacing: 1px; text-transform: uppercase; }
+        @media (max-width: 480px) {
+          .main-card { padding: 12px !important; border-width: 2px !important; border-radius: 8px !important; }
+          .menu-item { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
+          .controls-wrapper { width: 100% !important; justify-content: space-between !important; }
+          h1 { font-size: 22px !important; margin-bottom: 15px !important; }
+          .section-divider { font-size: 14px !important; margin: 25px 0 15px 0; }
+        }
+      `}</style>
+
+      <div className="main-card">
         <h1 style={{ textAlign: 'center', marginBottom: '25px', color: '#1b5e20', fontSize: '28px', fontWeight: '900' }}>🌲 Меню Тургеньская форель</h1>
 
+        <div className="section-divider">Добро пожаловать! Пойманную форель гости на жарку отправляют самостоятельно</div>
         {renderCategory('🐟 Форель', MENU_DATA.forel)}
         {renderCategory('🔥 Блюда на заказ', MENU_DATA.custom_orders)}
         {renderCategory('🍟 Гарниры', MENU_DATA.garniry)}
@@ -170,6 +169,10 @@ export default function OrderMenu() {
         {renderCategory('🥤 Напитки', MENU_DATA.napitki)}
         {renderCategory('🥖 Хлебная корзина', MENU_DATA.bread)}
         {renderCategory('🍯 Дополнения', MENU_DATA.addons)}
+
+        <div className="section-divider ">После оформления заказа вас перенаправит на 
+         watsapp нажмите кнопку Отправить <IoSend/> для завершения заказа</div>
+         
         {renderCategory('⛺ Беседки и топчаны', MENU_DATA.besedki)}
 
         <div style={{ borderTop: '2px dashed #2e7d32', paddingTop: '15px', marginTop: '25px', fontSize: '16px', color: '#000000' }}>
@@ -187,27 +190,8 @@ export default function OrderMenu() {
           </div>
         </div>
 
-        <button
-          onClick={handleTestPostRequest}
-          disabled={loading}
-          style={{
-            width: '100%',
-            padding: '16px',
-            backgroundColor: loading ? '#aaaaaa' : '#4caf50',
-            color: '#ffffff',
-            border: 'none',
-            borderRadius: '6px',
-            fontSize: '18px',
-            fontWeight: 'bold',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            marginTop: '30px',
-            boxShadow: '0 4px 10px rgba(76,175,80,0.3)',
-            transition: 'background 0.2s'
-          }}
-          onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#2e7d32')}
-          onMouseOut={(e) => !loading && (e.target.style.backgroundColor = '#4caf50')}
-        >
-          {loading ? 'Отправка заказа...' : '🚀 Отправить заказ'}
+        <button onClick={handleTestPostRequest} disabled={loading} style={{ width: '100%', padding: '16px', backgroundColor: loading ? '#aaaaaa' : '#4caf50', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '18px', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '30px', boxShadow: '0 4px 10px rgba(76,175,80,0.3)', transition: 'background 0.2s' }}>
+          🚀 Оформить заказ
         </button>
       </div>
     </div>
