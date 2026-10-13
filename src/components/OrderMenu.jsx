@@ -160,7 +160,8 @@ export default function OrderMenu() {
       <div className="main-card">
         <h1 style={{ textAlign: 'center', marginBottom: '25px', color: '#1b5e20', fontSize: '28px', fontWeight: '900' }}>🌲 Меню Тургеньская форель</h1>
 
-        <div className="section-divider">Добро пожаловать! Пойманную форель гости на жарку отправляют самостоятельно</div>
+        <div className="section-divider">Добро пожаловать! Приятного отдыха! 
+           Пойманную форель желательно сдать на жарку самостоятельно </div>
         {renderCategory('🐟 Форель', MENU_DATA.forel)}
         {renderCategory('🔥 Блюда на заказ', MENU_DATA.custom_orders)}
         {renderCategory('🍟 Гарниры', MENU_DATA.garniry)}
