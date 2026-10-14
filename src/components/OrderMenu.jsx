@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useState } from 'react';
 import { MENU_DATA, ALL_ITEMS } from './menuData';
 import { IoSend } from 'react-icons/io5';
@@ -42,38 +41,9 @@ export default function OrderMenu() {
   const serviceCharge = Math.round(subtotal * 0.1);
   const totalWithService = subtotal + serviceCharge;
 
-   // Облачный счетчик: выдает сквозной номер для всех телефонов по очереди
-   const getNextOrderNumber = async () => {
-    try {
-      const now = new Date();
-      // Форматируем дату в YYYY-MM-DD по местному времени
-      const offset = now.getTimezoneOffset() * 60000;
-      const localISOTime = (new Date(now - offset)).toISOString();
-      const currentDayStr = localISOTime.split('T')[0]; 
 
-      // Название вашего проекта в системе (уникальное, без пересечений)
-      const bucketId = 'turgen_forel_cafe_888'; 
-      // Ключ меняется каждый день, обнуляя отсчет: orders_2026-10-14
-      const key = `orders_${currentDayStr}`;
-
-      // Запрос к бесплатному API для атомарного увеличения на +1
-      const response = await fetch(`https://kvdb.io{bucketId}/${key}`, {
-        method: 'PATCH',
-        body: '+1'
-      });
-
-      if (!response.ok) throw new Error('Ошибка сети');
-
-      const text = await response.text();
-      return parseInt(text, 10);
-    } catch (error) {
-      // Запасной план: если у гостя в горах плохой интернет, генерируем случайный номер
-      console.error("Включен резервный номер:", error);
-      return Math.floor(100 + Math.random() * 900); 
-    }
-  };
-
-  const handleTestPostRequest = async () => {
+  // Полностью синхронная функция — моментальный переход без блокировок Safari
+  const handleTestPostRequest = () => {
     const orderedItems = ALL_ITEMS.filter(item => (quantities[item.id] || 0) > 0).map(item => ({
       name: item.name,
       price: item.price,
@@ -86,31 +56,42 @@ export default function OrderMenu() {
       return;
     }
 
-    setLoading(true); // Включаем режим ожидания на кнопке
+    setLoading(true);
 
     const MY_WHATSAPP_NUMBER = '77052042550'; 
-    const orderNumber = await getNextOrderNumber(); // Получаем единый порядковый номер заказа
+    
+    // Номер от 10 до 299 + две буквы
+    const randomPart = Math.floor(10 + Math.random() * 290); 
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const randomLetter1 = letters[Math.floor(Math.random() * letters.length)];
+    const randomLetter2 = letters[Math.floor(Math.random() * letters.length)];
+    
+    const orderNumber = `${randomPart}${randomLetter1}${randomLetter2}`;
 
-    let message = `📋 *ЗАКАЗ №${orderNumber}*\n`;
-    message += `🌲 *НОВЫЙ ЗАКАЗ — Горы • Река* 🌲\n`;
-    message += `───────────────────\n`;
+    // Текст без сложных эмодзи и разделителей, ломающих верстку
+    let message = `*ЗАКАЗ №${orderNumber}*\n`;
+    message += `*Тургеньская форель*\n`;
+    message += `* * * * * * * * * *\n`;
     
     orderedItems.forEach((item, index) => {
-      message += `*${index + 1}. ${item.name}*\n`;
-      message += `   └ ${item.quantity} шт. х ${item.price} тг = *${item.total_item_price} тг*\n`;
+      message += `${index + 1}. *${item.name}*\n`;
+      message += `   - ${item.quantity} шт. х ${item.price} тг = *${item.total_item_price} тг*\n`;
     });
     
-    message += `───────────────────\n`;
-    message += `💵 *Сумма блюд:* ${subtotal} тг\n`;
-    message += `⚙️ *Обслуживание (10%):* ${serviceCharge} тг\n`;
-    message += `💰 *ИТОГО К ОПЛАТЕ:* *${totalWithService} тг*`;
+    message += `* * * * * * * * * *\n`;
+    message += `Сумма блюд: ${subtotal} тг\n`;
+    message += `Обслуживание (10%): ${serviceCharge} тг\n`;
+    message += `*ИТОГО К ОПЛАТЕ: ${totalWithService} тг*`;
 
-    const encodedMessage = encodeURIComponent(message);
+    // Безопасное кодирование строки
+    const encodedMessage = encodeURIComponent(message)
+      .replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
+
     const whatsappUrl = "https://wa.me/" + MY_WHATSAPP_NUMBER + "?text=" + encodedMessage;
 
     window.open(whatsappUrl, '_blank');
     setQuantities({}); 
-    setLoading(false); // Выключаем режим ожидания
+    setLoading(false);
   };
 
 
@@ -177,10 +158,11 @@ export default function OrderMenu() {
       `}</style>
 
       <div className="main-card">
-        <h1 style={{ textAlign: 'center', marginBottom: '25px', color: '#1b5e20', fontSize: '28px', fontWeight: '900' }}>🌲 Меню Тургеньская форель</h1>
+        <h1 style={{ textAlign: 'center', marginBottom: '25px', color: '#1b5e20', fontSize: '28px', fontWeight: '900' }}>
+          🌲 Меню Тургеньское Форелевое Хозяйство</h1>
 
         <div className="section-divider">Добро пожаловать! Приятного отдыха! 
-           Пойманную форель желательно сдать на жарку самостоятельно </div>
+           Пойманную форель желательно отнести на жарку самостоятельно </div>
         {renderCategory('🐟 Форель', MENU_DATA.forel)}
         {renderCategory('🔥 Блюда на заказ', MENU_DATA.custom_orders)}
         {renderCategory('🍟 Гарниры', MENU_DATA.garniry)}
