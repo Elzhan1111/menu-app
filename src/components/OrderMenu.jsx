@@ -43,21 +43,37 @@ export default function OrderMenu() {
   const totalWithService = subtotal + serviceCharge;
 
   const getNextOrderNumber = () => {
-    const now = new Date().getTime();
-    const savedTime = localStorage.getItem('order_timer');
+    const now = new Date();
+    
+    // Получаем текущую дату в формате YYYY-MM-DD с учетом местного времени
+    const offset = now.getTimezoneOffset() * 60000;
+    const localISOTime = (new Date(now - offset)).toISOString();
+    const currentDayStr = localISOTime.split('T')[0]; 
+    
+    const savedDay = localStorage.getItem('order_day');
     const savedNumber = localStorage.getItem('order_number');
+    
     let currentNumber = 1;
-
-    if (!savedTime || now - parseInt(savedTime) > 24 * 60 * 60 * 1000) {
-      localStorage.setItem('order_timer', now.toString());
+  
+    // Если наступил новый день или данных еще нет — сбрасываем счетчик на 1
+    if (savedDay !== currentDayStr) {
+      localStorage.setItem('order_day', currentDayStr);
       localStorage.setItem('order_number', '1');
+      currentNumber = 1;
     } else {
-      currentNumber = parseInt(savedNumber || '0') + 1;
+      // 1. Берем из памяти старый номер (если его нет, считаем что был 0)
+      const lastNumber = parseInt(savedNumber || '0', 10); 
+      
+      // 2. Увеличиваем строго на 1 (после 1 идет 2, после 99 идет 100)
+      currentNumber = lastNumber + 1;
+      
+      // 3. Сохраняем новый номер обратно в localStorage
       localStorage.setItem('order_number', currentNumber.toString());
     }
+    
     return currentNumber;
   };
-
+  
   const handleTestPostRequest = () => {
     const orderedItems = ALL_ITEMS.filter(item => (quantities[item.id] || 0) > 0).map(item => ({
       name: item.name,
