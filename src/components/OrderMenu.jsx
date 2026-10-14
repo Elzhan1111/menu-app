@@ -42,39 +42,38 @@ export default function OrderMenu() {
   const serviceCharge = Math.round(subtotal * 0.1);
   const totalWithService = subtotal + serviceCharge;
 
-  const getNextOrderNumber = () => {
-    const now = new Date();
-    
-    // Получаем текущую дату в формате YYYY-MM-DD с учетом местного времени
-    const offset = now.getTimezoneOffset() * 60000;
-    const localISOTime = (new Date(now - offset)).toISOString();
-    const currentDayStr = localISOTime.split('T')[0]; 
-    
-    const savedDay = localStorage.getItem('order_day');
-    const savedNumber = localStorage.getItem('order_number');
-    
-    let currentNumber = 1;
-  
-    // Если наступил новый день или данных еще нет — сбрасываем счетчик на 1
-    if (savedDay !== currentDayStr) {
-      localStorage.setItem('order_day', currentDayStr);
-      localStorage.setItem('order_number', '1');
-      currentNumber = 1;
-    } else {
-      // 1. Берем из памяти старый номер (если его нет, считаем что был 0)
-      const lastNumber = parseInt(savedNumber || '0', 10); 
-      
-      // 2. Увеличиваем строго на 1 (после 1 идет 2, после 99 идет 100)
-      currentNumber = lastNumber + 1;
-      
-      // 3. Сохраняем новый номер обратно в localStorage
-      localStorage.setItem('order_number', currentNumber.toString());
+   // Облачный счетчик: выдает сквозной номер для всех телефонов по очереди
+   const getNextOrderNumber = async () => {
+    try {
+      const now = new Date();
+      // Форматируем дату в YYYY-MM-DD по местному времени
+      const offset = now.getTimezoneOffset() * 60000;
+      const localISOTime = (new Date(now - offset)).toISOString();
+      const currentDayStr = localISOTime.split('T')[0]; 
+
+      // Название вашего проекта в системе (уникальное, без пересечений)
+      const bucketId = 'turgen_forel_cafe_888'; 
+      // Ключ меняется каждый день, обнуляя отсчет: orders_2026-10-14
+      const key = `orders_${currentDayStr}`;
+
+      // Запрос к бесплатному API для атомарного увеличения на +1
+      const response = await fetch(`https://kvdb.io{bucketId}/${key}`, {
+        method: 'PATCH',
+        body: '+1'
+      });
+
+      if (!response.ok) throw new Error('Ошибка сети');
+
+      const text = await response.text();
+      return parseInt(text, 10);
+    } catch (error) {
+      // Запасной план: если у гостя в горах плохой интернет, генерируем случайный номер
+      console.error("Включен резервный номер:", error);
+      return Math.floor(100 + Math.random() * 900); 
     }
-    
-    return currentNumber;
   };
-  
-  const handleTestPostRequest = () => {
+
+  const handleTestPostRequest = async () => {
     const orderedItems = ALL_ITEMS.filter(item => (quantities[item.id] || 0) > 0).map(item => ({
       name: item.name,
       price: item.price,
@@ -87,8 +86,10 @@ export default function OrderMenu() {
       return;
     }
 
+    setLoading(true); // Включаем режим ожидания на кнопке
+
     const MY_WHATSAPP_NUMBER = '77052042550'; 
-    const orderNumber = getNextOrderNumber();
+    const orderNumber = await getNextOrderNumber(); // Получаем единый порядковый номер заказа
 
     let message = `📋 *ЗАКАЗ №${orderNumber}*\n`;
     message += `🌲 *НОВЫЙ ЗАКАЗ — Горы • Река* 🌲\n`;
@@ -109,7 +110,9 @@ export default function OrderMenu() {
 
     window.open(whatsappUrl, '_blank');
     setQuantities({}); 
+    setLoading(false); // Выключаем режим ожидания
   };
+
 
   const renderCategory = (title, items) => (
     <div style={{ marginBottom: '20px', backgroundColor: '#ffffff', padding: '15px', borderRadius: '8px', border: '1px solid #2e7d32' }}>
