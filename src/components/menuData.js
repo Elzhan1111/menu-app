@@ -42,7 +42,6 @@ export const MENU_DATA = {
     { id: 'tc4', name: 'Чай Ташкентский', price: 1250 },
     { id: 'tc5', name: 'Кружка чая', price: 350 },
     { id: 'tc6', name: 'Кофе, кружка', price: 450 },
-    { id: 'tc7', name: 'Кипяток', price: 200 },
   ],
   napitki: [
     { id: 'n1', name: 'Кола 1 л', price: 1050 },
