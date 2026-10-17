@@ -163,6 +163,9 @@ export default function OrderMenu() {
 
         <div className="section-divider">Добро пожаловать! Приятного отдыха! 
            Пойманную форель желательно отнести на жарку самостоятельно </div>
+        <div className="section-divider">Перед отправкой заказа по меню уточните пожалуйста 
+          у официанта есть ли в наличии данное блюда Спасибо! 
+           </div>
         {renderCategory('🐟 Форель', MENU_DATA.forel)}
         {renderCategory('🔥 Блюда на заказ', MENU_DATA.custom_orders)}
         {renderCategory('🍟 Гарниры', MENU_DATA.garniry)}
