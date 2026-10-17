@@ -6,7 +6,7 @@ export const MENU_DATA = {
     { id: 'f2', name: 'Жарка форели и чистка 1 шт', price: 650 },
     { id: 'f3', name: 'Чистка форели 1 шт ', price: 100 },
     { id: 'f4', name: 'Уха из форели 1 порц', price: 650 },
-    { id: 'f5', name: 'Готовая жаренная форель 1 шт', price: 3100 },
+    // { id: 'f5', name: 'Готовая жаренная форель 1 шт', price: 3100 },
   ],
   custom_orders: [
     { id: 'c1', name: 'Сірне 5 порций', price: 13500 },
