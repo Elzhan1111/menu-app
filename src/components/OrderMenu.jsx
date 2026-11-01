@@ -200,9 +200,9 @@ export default function OrderMenu() {
 
          {/* Компактный блок ввода с ограничением до 3-х символов */}
          <div style={{ marginTop: '25px', padding: '15px', border: '1px solid #2e7d32', borderRadius: '6px', backgroundColor: '#f1f8e9', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          {/* <label htmlFor="table-number-input" style={{ color: '#1b5e20', fontWeight: 'bold', fontSize: '16px' }}>
+          <label htmlFor="table-number-input" style={{ color: '#1b5e20', fontWeight: 'bold', fontSize: '16px' }}>
             Введите номер беседки / топчана:
-          </label> */}
+          </label>
           <input
             id="table-number-input"
             type="text"
