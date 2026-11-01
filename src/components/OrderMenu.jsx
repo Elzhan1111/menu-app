@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { MENU_DATA, ALL_ITEMS } from './menuData';
 import { IoSend } from 'react-icons/io5';
 
-
 export default function OrderMenu() {
   const [quantities, setQuantities] = useState({});
+  const [tableNumber, setTableNumber] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleCheckboxChange = (id) => {
@@ -41,8 +41,6 @@ export default function OrderMenu() {
   const serviceCharge = Math.round(subtotal * 0.1);
   const totalWithService = subtotal + serviceCharge;
 
-
-  // Полностью синхронная функция — моментальный переход без блокировок Safari
   const handleTestPostRequest = () => {
     const orderedItems = ALL_ITEMS.filter(item => (quantities[item.id] || 0) > 0).map(item => ({
       name: item.name,
@@ -56,20 +54,22 @@ export default function OrderMenu() {
       return;
     }
 
-    setLoading(true);
+    if (!tableNumber.trim()) {
+      alert('Пожалуйста, укажите номер вашей беседки или топчана!');
+      return;
+    }
 
+    setLoading(true);
     const MY_WHATSAPP_NUMBER = '77052042550'; 
     
-    // Номер от 10 до 299 + две буквы
     const randomPart = Math.floor(10 + Math.random() * 290); 
     const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const randomLetter1 = letters[Math.floor(Math.random() * letters.length)];
     const randomLetter2 = letters[Math.floor(Math.random() * letters.length)];
-    
     const orderNumber = `${randomPart}${randomLetter1}${randomLetter2}`;
 
-    // Текст без сложных эмодзи и разделителей, ломающих верстку
     let message = `*ЗАКАЗ №${orderNumber}*\n`;
+    message += `*Беседка / Топчан №: ${tableNumber}*\n`;
     message += `*Тургеньская форель*\n`;
     message += `* * * * * * * * * *\n`;
     
@@ -83,7 +83,6 @@ export default function OrderMenu() {
     message += `Обслуживание (10%): ${serviceCharge} тг\n`;
     message += `*ИТОГО К ОПЛАТЕ: ${totalWithService} тг*`;
 
-    // Безопасное кодирование строки
     const encodedMessage = encodeURIComponent(message)
       .replace(/[!'()*]/g, (c) => '%' + c.charCodeAt(0).toString(16).toUpperCase());
 
@@ -91,10 +90,9 @@ export default function OrderMenu() {
 
     window.open(whatsappUrl, '_blank');
     setQuantities({}); 
+    setTableNumber('');
     setLoading(false);
   };
-
-
   const renderCategory = (title, items) => (
     <div style={{ marginBottom: '20px', backgroundColor: '#ffffff', padding: '15px', borderRadius: '8px', border: '1px solid #2e7d32' }}>
       <h3 style={{ borderBottom: '2px solid #2e7d32', paddingBottom: '5px', marginTop: 0, color: '#1b5e20', fontSize: '18px', fontWeight: 'bold' }}>{title}</h3>
@@ -159,13 +157,16 @@ export default function OrderMenu() {
 
       <div className="main-card">
         <h1 style={{ textAlign: 'center', marginBottom: '25px', color: '#1b5e20', fontSize: '28px', fontWeight: '900' }}>
-          🌲 Меню Тургеньское Форелевое Хозяйство</h1>
+          🌲 Меню Тургеньское Форелевое Хозяйство
+        </h1>
 
-        <div className="section-divider">Добро пожаловать! Приятного отдыха! 
-           Пойманную форель желательно отнести на жарку самостоятельно </div>
-        <div className="section-divider">Перед отправкой заказа по меню уточните пожалуйста 
-          у официанта есть ли в наличии данное блюда Спасибо! 
-           </div>
+        <div className="section-divider">
+          Добро пожаловать! Приятного отдыха! Пойманную форель желательно отнести на жарку самостоятельно
+        </div>
+        <div className="section-divider">
+          Перед отправкой заказа по меню уточните пожалуйста у официанта есть ли в наличии данное блюда Спасибо!
+        </div>
+
         {renderCategory('🐟 Форель', MENU_DATA.forel)}
         {renderCategory('🔥 Блюда на заказ', MENU_DATA.custom_orders)}
         {renderCategory('🍟 Гарниры', MENU_DATA.garniry)}
@@ -175,8 +176,9 @@ export default function OrderMenu() {
         {renderCategory('🥖 Хлебная корзина', MENU_DATA.bread)}
         {renderCategory('🍯 Дополнения', MENU_DATA.addons)}
 
-        <div className="section-divider ">После оформления заказа вас перенаправит на 
-         watsapp нажмите кнопку Отправить <IoSend/> для завершения заказа</div>
+        <div className="section-divider">
+          После оформления заказа вас перенаправит на WhatsApp, нажмите кнопку Отправить <IoSend/> для завершения заказа
+        </div>
          
         {renderCategory('⛺ Беседки и топчаны', MENU_DATA.besedki)}
 
@@ -195,7 +197,28 @@ export default function OrderMenu() {
           </div>
         </div>
 
-        <button onClick={handleTestPostRequest} disabled={loading} style={{ width: '100%', padding: '16px', backgroundColor: loading ? '#aaaaaa' : '#4caf50', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '18px', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '30px', boxShadow: '0 4px 10px rgba(76,175,80,0.3)', transition: 'background 0.2s' }}>
+
+         {/* Компактный блок ввода с ограничением до 3-х символов */}
+         <div style={{ marginTop: '25px', padding: '15px', border: '1px solid #2e7d32', borderRadius: '6px', backgroundColor: '#f1f8e9', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {/* <label htmlFor="table-number-input" style={{ color: '#1b5e20', fontWeight: 'bold', fontSize: '16px' }}>
+            Введите номер беседки / топчана:
+          </label> */}
+          <input
+            id="table-number-input"
+            type="text"
+            placeholder="№"
+            maxLength={3}
+            value={tableNumber}
+            onChange={(e) => setTableNumber(e.target.value)}
+            style={{ width: '100%', maxWidth: '120px', padding: '12px', border: '2px solid #2e7d32', borderRadius: '4px', fontSize: '16px', boxSizing: 'border-box', outline: 'none', textAlign: 'center', fontWeight: 'bold' }}
+          />
+        </div>
+
+        <button 
+          onClick={handleTestPostRequest} 
+          disabled={loading} 
+          style={{ width: '100%', padding: '16px', backgroundColor: loading ? '#aaaaaa' : '#4caf50', color: '#ffffff', border: 'none', borderRadius: '6px', fontSize: '18px', fontWeight: 'bold', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '20px', boxShadow: '0 4px 10px rgba(76,175,80,0.3)', transition: 'background 0.2s' }}
+        >
           🚀 Оформить заказ
         </button>
       </div>
